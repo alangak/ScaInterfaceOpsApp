@@ -1,2 +1,7 @@
 <Solution>
+  <Project Path="../tests/ScaInterfaceOpsApp.Application.Tests/ScaInterfaceOpsApp.Application.Tests.csproj" Id="16b4e660-ec4e-47c5-ba3d-95d8c7ce8628" />
+  <Project Path="ScaInterfaceOpsApp.Application/ScaInterfaceOpsApp.Application.csproj" Id="66730067-fade-49e6-a226-23aa2ff675e6" />
+  <Project Path="ScaInterfaceOpsApp.CmdBox/ScaInterfaceOpsApp.CmdBox.csproj" Id="01861420-b521-4d3f-a561-416cbce7b063" />
+  <Project Path="ScaInterfaceOpsApp.Infrastructure/ScaInterfaceOpsApp.Infrastructure.csproj" Id="fc8af3bd-0dea-4cb4-a5ba-08770f921486" />
+  <Project Path="ScaInterfaceOpsApp.Shared/ScaInterfaceOpsApp.Shared.csproj" Id="5aaee47e-13a4-4188-bb66-a80a46971524" />
 </Solution>

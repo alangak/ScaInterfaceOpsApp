@@ -8,6 +8,4 @@ namespace ScaInterfaceOpsApp.Application.Operations.CenterOnboarding.Models
     /// Placeholder model.
     /// </summary>
     public sealed record CenterOnboardingRequest;
-    {
-    }
 }
