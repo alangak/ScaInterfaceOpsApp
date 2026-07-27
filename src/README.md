@@ -1,4 +1,3 @@
-s
 # AI Implementation Prompt
 
 You are a Senior .NET Solution Architect.
