@@ -1,109 +1,332 @@
-# AI Implementation Prompt
+# ScaInterfaceOpsApp - Implementation Specification Prompt
 
-You are a Senior .NET Solution Architect.
+You are a Senior .NET 8 Solution Architect and Developer.
 
-Generate a production-ready .NET 8 solution using Clean Architecture principles while keeping the design pragmatic and avoiding unnecessary abstractions.
+Generate a production-quality .NET 8 solution based on the architecture defined below.
 
-## Solution Name
+Do not introduce additional architectural patterns unless explicitly requested.
+
+---
+
+# Solution Name
 
 ScaInterfaceOpsApp
 
 ---
 
-## Projects
+# Architecture Decision
 
-Create four projects.
+Implement:
+
+- Simplified Clean Architecture
+- Vertical Slice Architecture
+- Dependency Injection
+- Interface-based abstraction
+- Options Pattern
+- FluentValidation
+- Result Pattern
+
+Do NOT implement:
+
+- CQRS
+- MediatR
+- Domain Driven Design
+- Generic Repository
+- Unit Of Work
+- Event Sourcing
+- Pipeline Behaviors
+- Repository per Entity
+
+The application is an operational workflow application, not a generic framework.
+
+---
+
+# Solution Structure
+
+Create the following projects:
+
+```
+src/
 
 ScaInterfaceOpsApp.Console
+    Type: Console Application
 
 ScaInterfaceOpsApp.Application
+    Type: Class Library
 
 ScaInterfaceOpsApp.Infrastructure
+    Type: Class Library
 
-ScaInterfaceOpsApp.Common
+ScaInterfaceOpsApp.Shared
+    Type: Class Library
 
----
 
-## Purpose
+tests/
 
-The application is a Console Application that automates operational tasks for SCA Interface Centers.
-
-Input is always an Excel workbook.
-
-Future API support should be possible without changing business logic.
-
----
-
-## Current Operations
-
-### Center Onboarding
-
-Responsibilities:
-
-- Read Center information from Excel
-- Validate data
-- Determine whether SQL records require Insert or Update
-- Create or Update Azure Key Vault secrets
-- Append SQL Filters to existing Azure Service Bus Topic Subscriptions
-- Produce execution result
+ScaInterfaceOpsApp.Tests
+    Type: xUnit Test Project
+```
 
 ---
 
-### Center Offboarding
+# Project Dependency Rules
 
-Responsibilities:
+Allowed dependencies:
 
-- Mark SQL records inactive
-- Delete selected SQL records
-- Delete Azure Key Vault secrets
-- Remove Service Bus Filters
-- Remove Service Bus Subscription if required
-- Produce execution result
+```
+Console
+    |
+    +--> Application
+    |
+    +--> Infrastructure
+    |
+    +--> Shared
 
----
 
-## Input
+Infrastructure
+    |
+    +--> Application
+    |
+    +--> Shared
 
-Input source is ONLY Excel.
 
-Create an abstraction for reading Excel.
+Application
+    |
+    +--> Shared
 
-The business operations must never directly reference EPPlus, ClosedXML, or any Excel library.
 
----
+Tests
+    |
+    +--> Application
+    |
+    +--> Shared
+```
 
-## Infrastructure Responsibilities
+Rules:
 
-SQL Server
-
-- Repository implementation
-- Stored Procedure execution
-- Query support
-
-Azure Key Vault
-
-- Get Secret
-- Set Secret
-- Delete Secret
-
-Azure Service Bus
-
-- Create SQL Filter
-- Update SQL Filter
-- Delete SQL Filter
-- Delete Subscription
-
-Excel
-
-- Read Workbook
-- Convert rows into request models
+- Application must not reference Infrastructure.
+- Application must not reference Azure SDKs.
+- Application must not reference SQL libraries.
+- Business logic must remain independent of external systems.
 
 ---
 
-## Contracts
+# Business Scope
 
-Create interfaces for:
+The application manages SCA Interface Center lifecycle operations.
 
+Current supported operations:
+
+1. Center Onboarding
+2. Center Offboarding
+
+No other operations are required.
+
+---
+
+# Input
+
+Input source is fixed.
+
+The application receives an Excel workbook.
+
+Excel is the only input source.
+
+Do not design API input models.
+
+Do not design database-driven input.
+
+The Excel reader must be abstracted.
+
+Flow:
+
+```
+Excel Workbook
+
+        |
+
+Excel Reader
+
+        |
+
+Request Models
+
+        |
+
+Operation Execution
+```
+
+---
+
+# Center Onboarding Operation
+
+Purpose:
+
+Add new centers or update existing centers.
+
+The operation internally determines whether the action is:
+
+- Insert
+- Update
+
+
+Workflow:
+
+```
+Excel Data
+
+    |
+
+Validation
+
+    |
+
+Check Existing Center
+
+    |
+
+SQL Insert / Update
+
+    |
+
+Azure Key Vault Add / Update
+
+    |
+
+Azure Service Bus Filter Append
+
+    |
+
+Execution Result
+```
+
+---
+
+# Center Offboarding Operation
+
+Purpose:
+
+Disable and cleanup existing centers.
+
+Workflow:
+
+```
+Excel Data
+
+    |
+
+Validation
+
+    |
+
+SQL Flag / Delete
+
+    |
+
+Key Vault Cleanup
+
+    |
+
+Service Bus Filter Cleanup
+
+    |
+
+Execution Result
+```
+
+---
+
+# Application Project Structure
+
+Use vertical slice organization.
+
+```
+Application
+
+    Abstractions
+
+        Data
+
+        Excel
+
+        Messaging
+
+        Secrets
+
+
+    Operations
+
+        CenterOnboarding
+
+            Models
+
+            Contracts
+
+            Validators
+
+            CenterOnboardingOperation.cs
+
+            ICenterOnboardingOperation.cs
+
+
+        CenterOffboarding
+
+            Models
+
+            Contracts
+
+            Validators
+
+            CenterOffboardingOperation.cs
+
+            ICenterOffboardingOperation.cs
+```
+
+---
+
+# Infrastructure Structure
+
+```
+Infrastructure
+
+    SqlServer
+
+        SqlRepository.cs
+
+
+    KeyVault
+
+        AzureKeyVaultService.cs
+
+
+    ServiceBus
+
+        AzureServiceBusAdministration.cs
+
+
+    Excel
+
+        ExcelReader.cs
+
+
+    Configuration
+
+        SqlOptions.cs
+
+        KeyVaultOptions.cs
+
+        ServiceBusOptions.cs
+
+        ExcelOptions.cs
+```
+
+---
+
+# Required Application Interfaces
+
+Create:
+
+```
 ISqlRepository
 
 IKeyVaultService
@@ -111,39 +334,90 @@ IKeyVaultService
 IServiceBusAdministration
 
 IExcelReader
+```
+
+Interfaces belong in Application.
+
+Implementations belong in Infrastructure.
 
 ---
 
-## Dependency Injection
+# SQL Requirements
 
-Both Console and Infrastructure should expose Dependency Injection extension methods.
+Provide placeholder implementation for:
 
-Program.cs should only:
+- Execute stored procedure
+- Query single record
+- Query collection
 
-- Build Configuration
-- Configure DI
-- Read Excel
-- Execute Operations
-- Log Results
+Use:
 
----
+- Dapper
+- Microsoft.Data.SqlClient
 
-## Logging
-
-Use Microsoft.Extensions.Logging.
-
-Support Console logging.
-
-Design so Serilog can be added later without changing application code.
+No Entity Framework.
 
 ---
 
-## Configuration
+# Azure Key Vault Requirements
 
-Use strongly typed Options pattern.
+Provide placeholder implementation for:
 
-Examples:
+- Get Secret
+- Create Secret
+- Update Secret
+- Delete Secret
 
+Use:
+
+- Azure.Identity
+- Azure.Security.KeyVault.Secrets
+
+---
+
+# Azure Service Bus Requirements
+
+Provide placeholder implementation for:
+
+- Add Subscription Filter
+- Update Filter
+- Remove Filter
+- Remove Subscription
+
+Use:
+
+- Azure Service Bus Administration Client
+
+Important:
+
+For Center Onboarding:
+
+Service Bus subscriptions already exist.
+
+The operation only appends filters.
+
+---
+
+# Excel Requirements
+
+Create abstraction for Excel reading.
+
+The implementation may use:
+
+- ClosedXML
+
+The Application layer must only see:
+
+- Excel DTO
+- Request Models
+
+---
+
+# Configuration
+
+Use strongly typed options:
+
+```
 SqlOptions
 
 KeyVaultOptions
@@ -151,86 +425,111 @@ KeyVaultOptions
 ServiceBusOptions
 
 ExcelOptions
+```
+
+Configuration source:
+
+appsettings.json
 
 ---
 
-## Validation
+# Logging
+
+Use:
+
+Microsoft.Extensions.Logging
+
+Console logging is sufficient.
+
+Design should allow Serilog addition later.
+
+---
+
+# Validation
 
 Use FluentValidation.
 
 Each operation owns its validators.
 
----
+Examples:
 
-## Error Handling
+CenterOnboardingValidator
 
-Create a Result<T> pattern.
-
-Avoid throwing exceptions for expected validation failures.
-
-Only throw exceptions for unexpected infrastructure failures.
+CenterOffboardingValidator
 
 ---
 
-## Folder Organization
+# Error Handling
 
-Organize Application by Operations.
+Implement:
 
-Operations
+Result<T>
 
-    CenterOnboarding
+Expected validation failures should return Result failures.
 
-    CenterOffboarding
-
-Each operation contains:
-
-Models
-
-Validators
-
-Contracts
-
-Operation
+Unexpected infrastructure failures may throw exceptions.
 
 ---
 
-## Coding Guidelines
+# Testing
 
-- Async all the way
-- Constructor Injection only
-- No static helper classes except extensions
-- SOLID principles
-- Small focused classes
-- XML documentation
+Create:
+
+```
+ScaInterfaceOpsApp.Tests
+```
+
+Use:
+
+- xUnit
+- FluentAssertions
+- Moq
+
+Tests should cover:
+
+- Center onboarding validation
+- Center onboarding workflow decisions
+- Center offboarding validation
+- Center offboarding workflow decisions
+
+External dependencies must be mocked.
+
+No real Azure or SQL dependency required for unit tests.
+
+---
+
+# Coding Standards
+
+Use:
+
+- .NET 8
 - Nullable enabled
 - Implicit usings enabled
-- File-scoped namespaces
-- Primary constructors where appropriate
-- Use records for immutable request models
-- Use readonly where possible
+- File scoped namespaces
+- Async methods
+- Constructor dependency injection
+- Records for immutable request models
+- XML documentation
+- Clean naming conventions
 
 ---
 
-## Output Expected
+# Deliverables
 
-Generate the complete solution structure.
+Generate:
 
-Generate all interfaces.
+1. Solution file
+2. Project files
+3. Folder structure
+4. Project references
+5. Dependency injection setup
+6. Configuration classes
+7. Interfaces
+8. Placeholder implementations
+9. Sample Program.cs
+10. Sample appsettings.json
+11. Test project skeleton
 
-Generate placeholder implementations.
+Do not generate unnecessary business implementation.
 
-Generate Dependency Injection.
-
-Generate configuration classes.
-
-Generate Program.cs.
-
-Generate sample appsettings.json.
-
-Generate project references.
-
-Generate csproj files.
-
-No business logic implementation is required.
-
-Only production-quality skeleton code with placeholders and TODO comments.
+Focus on a clean production-ready foundation.
